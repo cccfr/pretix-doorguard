@@ -70,7 +70,6 @@ with picamera.PiCamera() as camera:
         frame = Image.open(stream)
         #frame.save("cam.png")
         barcodes=decode(frame)
-        print(barcodes)
         for barcode in barcodes:
             signalLED()
             data = barcode.data.decode("utf-8")
