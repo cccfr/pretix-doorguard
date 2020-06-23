@@ -26,7 +26,7 @@ def getCodes():
     lists = res.json()["results"]
     for checkinlist in lists:
         if checkinlist["name"] in ("daily, monthly, yearly"):
-            res = requests.get("%s/api/v1/organizers/hustepeter/events/caferuss/checkinlists/%s/positions" %(mateserver, checkinlist["id"], headers=headers)
+            res = requests.get("%s/api/v1/organizers/hustepeter/events/caferuss/checkinlists/%s/positions" %(mateserver, checkinlist["id"]), headers=headers)
             if res.status_code != 200:
                 continue
             tickets = res.json()["results"]
