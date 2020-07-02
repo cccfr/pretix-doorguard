@@ -9,7 +9,8 @@ from PIL import Image
 import requests
 from systemd.journal import JournaldLogHandler
 import logging
-import sys
+import sys, os
+import subprocess
 
 logger = logging.getLogger(__name__)
 journald_handler = JournaldLogHandler()
@@ -66,9 +67,8 @@ def checkinCode(code):
         logger.error("cannot checkin ticket: %s\n%s" %(code, res.text))
 
 def openDoor():
-    print("opening...")
-    pass
-    print("done opening")
+    logger.info("opening")
+    subprocess.run(["/bin/bash", "%s/openDoor.sh" %os.path.dirname(os.path.realpath(__file__))])
     time.sleep(5)
 
 def signalLED():
@@ -77,7 +77,8 @@ def signalLED():
 def main():
     global config
     global lastSync
-    with open("config.json") as configfile:
+    subprocess.run(["/bin/bash", "%s/initGPIO.sh" %os.path.dirname(os.path.realpath(__file__))])
+    with open("%s/config.json" %os.path.dirname(os.path.realpath(__file__))) as configfile:
         config = json.load(configfile)
 
     codes = getCodes()
@@ -89,6 +90,8 @@ def main():
         camera.start_preview()
         time.sleep(2)
         logger.info("Scanner initialized")
+        logger.info("testing Opener")
+        openDoor()
         while True:
             timePassed = datetime.datetime.now() - lastSync
             if timePassed.seconds > 10:
