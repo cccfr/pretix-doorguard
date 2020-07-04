@@ -42,7 +42,11 @@ def getCodes():
     for organizer in config["organizers"].keys():
         for event in config["organizers"][organizer].keys():
             logger.debug("getting checkinlists for %s/%s" %(organizer, event))
-            res = requests.get("%s/api/v1/organizers/%s/events/%s/checkinlists" %(config["pretix"], organizer, event), headers=config["headers"])
+            try:
+                res = requests.get("%s/api/v1/organizers/%s/events/%s/checkinlists" %(config["pretix"], organizer, event), headers=config["headers"])
+            except requests.ConnectionError as e:
+                logger.error("error getting checkin lists:\n%s" %e)
+                return {}
             if res.status_code != 200:
                 logger.error("error getting checkin lists")
                 return {}
@@ -51,7 +55,11 @@ def getCodes():
             for checkinlist in lists:
                 logger.debug("if %s in %s\n%s" %(checkinlist["name"], config["organizers"][organizer][event], checkinlist["name"] in config["organizers"][organizer][event]))
                 if checkinlist["name"] in config["organizers"][organizer][event]:
-                    res = requests.get("%s/api/v1/organizers/%s/events/%s/checkinlists/%s/positions" %(config["pretix"], organizer, event, checkinlist["id"]), headers=config["headers"])
+                    try:
+                        res = requests.get("%s/api/v1/organizers/%s/events/%s/checkinlists/%s/positions" %(config["pretix"], organizer, event, checkinlist["id"]), headers=config["headers"])
+                    except requests.ConnectionError as e:
+                        logger.error("error getting orders:\n%s" %e)
+                        continue
                     if res.status_code != 200:
                         continue
                     tickets = res.json()["results"]
@@ -62,7 +70,11 @@ def getCodes():
     return codes
 
 def checkinCode(code):
-    res = requests.post("%s/api/v1/organizers/%s/events/%s/checkinlists/%s/positions/%s/redeem/" %(config["pretix"], code["organizer"], code["event"], code["checkinlist"], code["id"]), headers=config["headers"])
+    try:
+        res = requests.post("%s/api/v1/organizers/%s/events/%s/checkinlists/%s/positions/%s/redeem/" %(config["pretix"], code["organizer"], code["event"], code["checkinlist"], code["id"]), headers=config["headers"])
+    except requests.ConnectionError as e:
+        logger.error("cannot checkin ticket:\n%s" %e)
+        return
     if res.status_code != 201:
         logger.error("cannot checkin ticket: %s\n%s" %(code, res.text))
 
